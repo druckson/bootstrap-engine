@@ -30,11 +30,13 @@ Engine::Engine() {
 
 void Engine::AddSystem(System *system) {
     this->_systems.insert(system);
+    system->Init();
 }
 
 void Engine::Update(float dt) {
     for (const auto& system: this->_systems) {
         system->Update(dt);
+        system->Draw();
     }
 }
 
