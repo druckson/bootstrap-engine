@@ -47,15 +47,26 @@ void Engine::MainLoop() {
         auto now = chrono::high_resolution_clock::now();
 
         dt = (double)(chrono::duration_cast<chrono::microseconds>(now - then).count()) / 1000000.0;
-        this->Update(dt);
         then = now;
-        boost::this_thread::sleep(boost::posix_time::microseconds(1000000.0 / (double)this->_frameRate));
+        cout << "FPS: " << 1/dt << endl;
+        this->Update(dt);
+        now = chrono::high_resolution_clock::now();
+        dt = (double)(chrono::duration_cast<chrono::microseconds>(now - then).count());
+        boost::this_thread::sleep(boost::posix_time::microseconds((1000000.0 / (double)this->_frameRate) - dt));
     }
 }
 
 Entity Engine::CreateEntity() {
     Entity newEntity = this->_nextEntity++;
+
+    // Add the entity to all registered systems
+    for (const auto& system: this->_systems) {
+        system->AddEntity(newEntity, 0);
+    }
+
+    // Add the
     this->_entities.insert(newEntity);
+
     return newEntity;
 }
 #endif
