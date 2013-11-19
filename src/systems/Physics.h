@@ -33,7 +33,6 @@ void Physics::AddEntity(Entity entity, void *data) {
 }
 
 void Physics::Update(float dt) {
-    cout << "Physics" << endl;
     return;
 }
 
