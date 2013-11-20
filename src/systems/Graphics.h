@@ -23,6 +23,8 @@ class Graphics : public System {
     GLuint _createVertexShader(const string shaderFile);
     GLuint _createFragmentShader(const string shaderFile);
     GLuint _createShaderProgram(const string vertexShaderFile, const string fragmentShaderFile);
+    void _printGLErrors(const string location);
+    void _printShaderInfoLog(const string location, GLuint shader);
 public:
     Graphics();
     ~Graphics();
@@ -41,6 +43,29 @@ Graphics::Graphics() {
 
 Graphics::~Graphics() {
     glfwTerminate();    
+}
+
+void Graphics::_printShaderInfoLog(const string location, GLuint shader)
+{
+    int infoLogLen = 0;
+    int charsWritten = 0;
+    GLchar *infoLog;
+    
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
+    
+    if (infoLogLen > 0)
+    {
+        infoLog = new GLchar[infoLogLen];
+        // error check for fail to allocate memory omitted
+        glGetShaderInfoLog(shader, infoLogLen, &charsWritten, infoLog);
+        cout << location << ": " << endl << infoLog << endl;
+        delete [] infoLog;
+    }
+}
+
+void Graphics::_printGLErrors(const string location) {
+    GLuint error = glGetError();
+    if (error) cout << location << ": " << gluErrorString(error) << endl;
 }
 
 void Graphics::Init() {
@@ -68,11 +93,10 @@ GLuint Graphics::_createVertexShader(const string shaderFile) {
     const GLint len = shaderFile.length();
     GLuint shader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(shader, 1, &cShaderFile, &len);
+    glCompileShader(shader);
 
-    // Print Errors
-    GLint error;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &error);
-    //cout << "Error: " << error << endl;
+    this->_printGLErrors("Vertex Shader");
+    return shader;
 }
 
 GLuint Graphics::_createFragmentShader(const string shaderFile) {
@@ -80,19 +104,25 @@ GLuint Graphics::_createFragmentShader(const string shaderFile) {
     const GLint len = shaderFile.length();
     GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(shader, 1, &cShaderFile, &len);
+    glCompileShader(shader);
 
-    // Print Errors
-    GLint error;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &error);
-    //cout << "Error: " << error << endl;
+    this->_printShaderInfoLog("Fragment Shader", shader);
+    this->_printGLErrors("Fragment Shader");
+    return shader;
 }
 
 GLuint Graphics::_createShaderProgram(const string vertexShaderFile, const string fragmentShaderFile) {
     GLuint vertexShader = this->_createVertexShader(vertexShaderFile);
     GLuint fragmentShader = this->_createFragmentShader(fragmentShaderFile);
     GLuint program = glCreateProgram();
+
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+
+    glUseProgram(program);
+    this->_printShaderInfoLog("Shader Program", program);
+    this->_printGLErrors("Shader Program");
     return program;
 }
 
@@ -117,11 +147,19 @@ void Graphics::AddEntity(Entity entity, void *data) {
     glBindBuffer(GL_ARRAY_BUFFER, obj->vbos[1]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
 
-    obj->position[0] = (double)((rand() % 40) - 20.);
-    obj->position[1] = (double)((rand() % 40) - 20.);
-    obj->position[2] = (double)((rand() % 40) - 20.);
+    obj->position[0] = 0.006 * (double)((rand() % 400) - 200.);
+    obj->position[1] = 0.006 * (double)((rand() % 400) - 200.);
+    obj->position[2] = 0.006 * (double)((rand() % 400) - 200.);
 
-    obj->shaderProgram = this->_createShaderProgram("", "");
+    obj->shaderProgram = this->_createShaderProgram("\
+    void main() {\
+        gl_Position = gl_Vertex;\
+    }\
+    ", "\
+    void main() {\
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\
+    }\
+    ");
 
     this->_entities[entity] = obj;
 }
@@ -152,6 +190,7 @@ void Graphics::Draw() {
                 glBindBuffer(GL_ARRAY_BUFFER, item.second->vbos[1]);
                 glColorPointer(3, GL_FLOAT, 3*sizeof(float), 0);
 
+                glUseProgram(item.second->shaderProgram);
                 glDrawArrays(GL_TRIANGLES,0,3);
             glPopMatrix();
         }
@@ -160,6 +199,7 @@ void Graphics::Draw() {
         glfwSwapBuffers(this->_window);
         glfwPollEvents();
     }
+    this->_printGLErrors("Draw");
     return;
 }
 
