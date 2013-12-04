@@ -11,10 +11,4 @@ public:
     virtual void RemoveEntity(Entity entity);
 };
 
-void System::Init() {}
-void System::AddEntity(Entity entity, void *data) {}
-void System::Update(float dt) {}
-void System::Draw() {}
-void System::RemoveEntity(Entity entity) {}
-
 #endif
