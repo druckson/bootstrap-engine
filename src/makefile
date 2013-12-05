@@ -7,7 +7,6 @@ INCLUDES = -I /usr/include
 all: ../build/test
 	rm ../build/*.o
 
-
 ../build/:
 	mkdir ../build/
 
@@ -22,4 +21,4 @@ all: ../build/test
 	g++ $(FLAGS) $(LIBS) $(INCLUDES) -o ../build/test test.cpp ../build/graphics.o
 
 clean:
-	rm ../build/test
+	rm -rf ../build
