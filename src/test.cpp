@@ -11,11 +11,9 @@ int main(int argc, char **argv) {
     engine->AddSystem(new Physics());
     engine->AddSystem(new Graphics());
 
-    Entity e1 = engine->CreateEntity();
-    Entity e2 = engine->CreateEntity();
-    Entity e3 = engine->CreateEntity();
+    for (int i=0; i<16000; i++) {
+        Entity e1 = engine->CreateEntity();
+    }
 
     engine->MainLoop();
-
-    std::cout << "Hello World! " << e1 << e2 << e3 << std::endl;
 }
