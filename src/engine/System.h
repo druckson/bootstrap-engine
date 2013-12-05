@@ -4,11 +4,11 @@
 
 class System {
 public:
-    virtual void Init();
-    virtual void AddEntity(Entity entity, void *data);
-    virtual void Update(float dt);
-    virtual void Draw();
-    virtual void RemoveEntity(Entity entity);
+    virtual void Init() {}
+    virtual void AddEntity(Entity entity, void *data) {}
+    virtual void Update(float dt) {}
+    virtual void Draw() {}
+    virtual void RemoveEntity(Entity entity) {}
 };
 
 #endif

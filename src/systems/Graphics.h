@@ -18,15 +18,11 @@ struct Sprite {
 class Graphics : public System {
     GLFWwindow* _window;
     int _currentIndex;
+    GLuint _shaderProgram;
     GLuint _vbos[3];
     float _vertices[16000*6];
     unordered_map<Entity, Sprite *> _entities;
     unordered_map<string, GLuint> _shaders;
-    GLuint _createVertexShader(const string shaderFile);
-    GLuint _createFragmentShader(const string shaderFile);
-    GLuint _createShaderProgram(const string vertexShaderFile, const string fragmentShaderFile);
-    void _printGLErrors(const string location);
-    void _printShaderInfoLog(const string location, GLuint shader);
 public:
     Graphics();
     ~Graphics();
