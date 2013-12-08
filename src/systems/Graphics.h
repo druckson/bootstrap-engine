@@ -19,8 +19,10 @@ class Graphics : public System {
     GLFWwindow* _window;
     int _currentIndex;
     GLuint _shaderProgram;
-    GLuint _vbos[3];
-    float _vertices[16000*6];
+    GLuint _vbos[5];
+    GLuint _textures[5];
+    float _vertices[1000000*9];
+    float _colors[1000000*9];
     unordered_map<Entity, Sprite *> _entities;
     unordered_map<string, GLuint> _shaders;
 public:
