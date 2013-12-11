@@ -21,8 +21,9 @@ class Graphics : public System {
     GLuint _shaderProgram;
     GLuint _vbos[5];
     GLuint _textures[5];
-    float _vertices[1000000*9];
-    float _colors[1000000*9];
+    float _vertices[1000000*12];
+    float _colors[1000000*18];
+    float _uvs[1000000*12];
     unordered_map<Entity, Sprite *> _entities;
     unordered_map<string, GLuint> _shaders;
 public:

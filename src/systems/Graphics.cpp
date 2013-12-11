@@ -1,66 +1,6 @@
 #include "Graphics.h"
 #include "../tools/ImageLoader.h"
 
-void printShaderInfoLog(const string location, GLuint shader)
-{
-    int infoLogLen = 0;
-    int charsWritten = 0;
-    GLchar *infoLog;
-    
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
-    
-    if (infoLogLen > 0)
-    {
-        infoLog = new GLchar[infoLogLen];
-        glGetShaderInfoLog(shader, infoLogLen, &charsWritten, infoLog);
-        cout << location << ": " << endl << infoLog << endl;
-        delete [] infoLog;
-    }
-}
-
-void printGLErrors(const string location) {
-    GLuint error = glGetError();
-    if (error) cout << location << ": " << gluErrorString(error) << endl;
-}
-
-GLuint createVertexShader(const string shaderFile) {
-    const char *cShaderFile = shaderFile.c_str();
-    const GLint len = shaderFile.length();
-    GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(shader, 1, &cShaderFile, &len);
-    glCompileShader(shader);
-
-    printShaderInfoLog("Vertex Shader", shader);
-    printGLErrors("Vertex Shader");
-    return shader;
-}
-
-GLuint createFragmentShader(const string shaderFile) {
-    const char *cShaderFile = shaderFile.c_str();
-    const GLint len = shaderFile.length();
-    GLuint shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(shader, 1, &cShaderFile, &len);
-    glCompileShader(shader);
-
-    printShaderInfoLog("Fragment Shader", shader);
-    printGLErrors("Fragment Shader");
-    return shader;
-}
-
-GLuint createShaderProgram(const string vertexShaderFile, const string fragmentShaderFile) {
-    GLuint vertexShader = createVertexShader(vertexShaderFile);
-    GLuint fragmentShader = createFragmentShader(fragmentShaderFile);
-    GLuint program = glCreateProgram();
-
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-    glLinkProgram(program);
-
-    printShaderInfoLog("Shader Program", program);
-    printGLErrors("Shader Program");
-    return program;
-}
-
 Graphics::Graphics() {
     if (!glfwInit()) {
         cerr << "ERROR: Failed to initialize GLFW" << endl;    
@@ -96,18 +36,25 @@ void Graphics::Init() {
 
     this->_shaderProgram = createShaderProgram("\
     void main() {\
+        gl_TexCoord[0] = gl_MultiTexCoord0;\
         gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
     }\
     ", "\
+    uniform sampler2D diffuse;\
+    uniform sampler2D normal;\
     void main() {\
-        gl_FragColor = gl_Color;\
+        vec4 normals = texture2D(normal, gl_TexCoord[0].st);\
+        float intensity = normals.r;\
+        gl_FragColor = texture2D(diffuse, gl_TexCoord[0].st) * intensity;\
     }\
     ");
 
     glGenTextures(5, this->_textures);
 
     ImageLoader *img = new ImageLoader();
-    img->loadImage("assests/images/crossnrm.jpg", &this->_textures[0]);
+    img->loadImage("./assets/images/crossColor.jpg", &this->_textures[0]);
+    img->loadImage("./assets/images/crossnrm.jpg", &this->_textures[1]);
+    printGLErrors("Image load");
 }
 
 void Graphics::AddEntity(Entity entity, void *data) {
@@ -115,21 +62,51 @@ void Graphics::AddEntity(Entity entity, void *data) {
     obj->index = this->_currentIndex++;
 
 
-    this->_colors[obj->index*9+0] = 1.0f;
-    this->_colors[obj->index*9+1] = 0.0f;
-    this->_colors[obj->index*9+2] = 0.0f;
+    this->_colors[obj->index*18+0] = 1.0f;
+    this->_colors[obj->index*18+1] = 0.0f;
+    this->_colors[obj->index*18+2] = 0.0f;
 
-    this->_colors[obj->index*9+3] = 0.0f;
-    this->_colors[obj->index*9+4] = 1.0f;
-    this->_colors[obj->index*9+5] = 0.0f;
+    this->_colors[obj->index*18+3] = 0.0f;
+    this->_colors[obj->index*18+4] = 1.0f;
+    this->_colors[obj->index*18+5] = 0.0f;
 
-    this->_colors[obj->index*9+6] = 0.0f;
-    this->_colors[obj->index*9+7] = 0.0f;
-    this->_colors[obj->index*9+8] = 1.0f;
+    this->_colors[obj->index*18+6] = 0.0f;
+    this->_colors[obj->index*18+7] = 0.0f;
+    this->_colors[obj->index*18+8] = 1.0f;
 
-    obj->position[0] = 0.01 * (double)((rand() % 400) - 200.);
-    obj->position[1] = 0.01 * (double)((rand() % 400) - 200.);
-    obj->position[2] = 0.01 * (double)((rand() % 400) - 200.);
+    this->_colors[obj->index*18+9] =  0.0f;
+    this->_colors[obj->index*18+10] = 1.0f;
+    this->_colors[obj->index*18+11] = 0.0f;
+
+    this->_colors[obj->index*18+12] = 0.0f;
+    this->_colors[obj->index*18+13] = 0.0f;
+    this->_colors[obj->index*18+14] = 1.0f;
+
+    this->_colors[obj->index*18+15] = 1.0f;
+    this->_colors[obj->index*18+16] = 1.0f;
+    this->_colors[obj->index*18+17] = 1.0f;
+
+    this->_uvs[obj->index*12+0] = 0.0f;
+    this->_uvs[obj->index*12+1] = 0.0f;
+
+    this->_uvs[obj->index*12+2] = 1.0f;
+    this->_uvs[obj->index*12+3] = 0.0f;
+
+    this->_uvs[obj->index*12+4] = 0.0f;
+    this->_uvs[obj->index*12+5] = 1.0f;
+
+    this->_uvs[obj->index*12+6] = 0.0f;
+    this->_uvs[obj->index*12+7] = 1.0f;
+
+    this->_uvs[obj->index*12+8] = 1.0f;
+    this->_uvs[obj->index*12+9] = 0.0f;
+
+    this->_uvs[obj->index*12+10] = 1.0f;
+    this->_uvs[obj->index*12+11] = 1.0f;
+
+    obj->position[0] = 0.9 * (double)((rand() % 400) - 200.);
+    obj->position[1] = 0.9 * (double)((rand() % 400) - 200.);
+    obj->position[2] = 0.9 * (double)((rand() % 400) - 200.);
 
     this->_entities[entity] = obj;
 }
@@ -139,8 +116,8 @@ void Graphics::RemoveEntity(Entity entity) {}
 void Graphics::Update(float dt) {
     for (auto &item: this->_entities) {
         //item.second->position[0] += 0.1*cos((float)glfwGetTime());
-        item.second->position[0] += 0.1*((float)(rand() % 100) / 100.0f - 0.5);
-        item.second->position[1] += 0.1*((float)(rand() % 100) / 100.0f - 0.5);
+        //item.second->position[0] += 0.1*((float)(rand() % 100) / 100.0f - 0.5);
+        //item.second->position[1] += 0.1*((float)(rand() % 100) / 100.0f - 0.5);
     }
 }
 
@@ -149,19 +126,29 @@ void Graphics::Draw() {
         glfwDestroyWindow(this->_window);
     else {
         for (auto &item: this->_entities) {
-            this->_vertices[item.second->index*6+0] = -0.6f + item.second->position[0];
-            this->_vertices[item.second->index*6+1] = -0.4f + item.second->position[1];
+            this->_vertices[item.second->index*12+0] =  -0.5f + item.second->position[0];
+            this->_vertices[item.second->index*12+1] =  -0.5f + item.second->position[1];
                                        
-            this->_vertices[item.second->index*6+2] =  0.6f + item.second->position[0];
-            this->_vertices[item.second->index*6+3] = -0.4f + item.second->position[1];
+            this->_vertices[item.second->index*12+2] =   0.5f + item.second->position[0];
+            this->_vertices[item.second->index*12+3] =  -0.5f + item.second->position[1];
                                        
-            this->_vertices[item.second->index*6+4] =  0.0f + item.second->position[0];
-            this->_vertices[item.second->index*6+5] =  0.6f + item.second->position[1];
+            this->_vertices[item.second->index*12+4] =  -0.5f + item.second->position[0];
+            this->_vertices[item.second->index*12+5] =   0.5f + item.second->position[1];
+                                       
+            this->_vertices[item.second->index*12+6] =  -0.5f + item.second->position[0];
+            this->_vertices[item.second->index*12+7] =   0.5f + item.second->position[1];
+                                       
+            this->_vertices[item.second->index*12+8] =   0.5f + item.second->position[0];
+            this->_vertices[item.second->index*12+9] =  -0.5f + item.second->position[1];
+
+            this->_vertices[item.second->index*12+10] =  0.5f + item.second->position[0];
+            this->_vertices[item.second->index*12+11] =  0.5f + item.second->position[1];
         }
         
         glPushMatrix();
         glMatrixMode(GL_MODELVIEW);
-        glScaled(1.5, 1.5, 1.5);
+        double scale = 4.5;
+        glScaled(scale, scale, scale);
 
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -169,16 +156,40 @@ void Graphics::Draw() {
         {   // Draw sprite VBO
             glEnableClientState(GL_VERTEX_ARRAY);
             glBindBuffer(GL_ARRAY_BUFFER, this->_vbos[0]);
-            glBufferData(GL_ARRAY_BUFFER, this->_currentIndex*6*sizeof(float), this->_vertices, GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, this->_currentIndex*12*sizeof(float), this->_vertices, GL_STATIC_DRAW);
             glVertexPointer(2, GL_FLOAT, 2*sizeof(float), 0);
 
-            glEnableClientState(GL_COLOR_ARRAY);
-            glBindBuffer(GL_ARRAY_BUFFER, this->_vbos[1]);
-            glBufferData(GL_ARRAY_BUFFER, this->_currentIndex*9*sizeof(float), this->_colors, GL_STATIC_DRAW);
-            glColorPointer(3, GL_FLOAT, 3*sizeof(float), 0);
+            //glEnableClientState(GL_COLOR_ARRAY);
+            //glBindBuffer(GL_ARRAY_BUFFER, this->_vbos[1]);
+            //glBufferData(GL_ARRAY_BUFFER, this->_currentIndex*9*sizeof(float), this->_colors, GL_STATIC_DRAW);
+            //glColorPointer(3, GL_FLOAT, 3*sizeof(float), 0);
 
-            //glUseProgram(this->_shaderProgram);
-            glDrawArrays(GL_TRIANGLES, 0, 3*this->_currentIndex);
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glBindBuffer(GL_ARRAY_BUFFER, this->_vbos[2]);
+            glBufferData(GL_ARRAY_BUFFER, this->_currentIndex*12*sizeof(float), this->_uvs, GL_STATIC_DRAW);
+            glTexCoordPointer(2, GL_FLOAT, 2*sizeof(float), 0);
+
+            glEnable(GL_TEXTURE_2D);
+            glActiveTexture(GL_TEXTURE0);
+            int textureLocation = glGetUniformLocation(this->_shaderProgram, "diffuse");
+            if (textureLocation == -1)
+                cout << "Invalid diffuse variable" << endl;
+            glUniform1i(textureLocation, 0);
+            glBindTexture(GL_TEXTURE_2D, this->_textures[0]);
+
+            glActiveTexture(GL_TEXTURE1);
+            textureLocation = glGetUniformLocation(this->_shaderProgram, "normal");
+            if (textureLocation == -1)
+                cout << "Invalid normals variable" << endl;
+            glUniform1i(textureLocation, 0);
+            glBindTexture(GL_TEXTURE_2D, this->_textures[1]);
+
+            glUseProgram(this->_shaderProgram);
+            glDrawArrays(GL_TRIANGLES, 0, 6*this->_currentIndex);
+
+            glDisableClientState(GL_VERTEX_ARRAY);
+            //glDisableClientState(GL_COLOR_ARRAY);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
         }
         glPopMatrix();
 
