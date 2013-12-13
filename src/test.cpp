@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     engine->AddSystem(new Physics());
     engine->AddSystem(new Graphics());
 
-    for (int i=0; i<16000; i++) {
+    for (int i=0; i<150000; i++) {
         Entity e1 = engine->CreateEntity();
     }
 
