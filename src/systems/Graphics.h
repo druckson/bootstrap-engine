@@ -24,6 +24,7 @@ class Graphics : public System {
     float _vertices[1000000*12];
     float _colors[1000000*18];
     float _uvs[1000000*12];
+    float lightAngle;
     unordered_map<Entity, Sprite *> _entities;
     unordered_map<string, GLuint> _shaders;
 public:

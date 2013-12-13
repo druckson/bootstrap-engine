@@ -16,6 +16,9 @@ void Graphics::Init() {
     this->_window = glfwCreateWindow(800, 600, "Hello World", NULL, NULL);
     this->_currentIndex = 0;
 
+    // Set up directional light
+    this->lightAngle = 0;
+
     if (!this->_window) {
         cerr << "ERROR: Failed to set up GLFW window" << endl;    
         glfwTerminate();
@@ -40,12 +43,14 @@ void Graphics::Init() {
         gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
     }\
     ", "\
-    uniform sampler2D diffuse;\
-    uniform sampler2D normal;\
+    uniform vec3 light;\
+    uniform sampler2D diffuseMap;\
+    uniform sampler2D normalMap;\
     void main() {\
-        vec4 normals = texture2D(normal, gl_TexCoord[0].st);\
-        float intensity = normals.r;\
-        gl_FragColor = texture2D(diffuse, gl_TexCoord[0].st) * intensity;\
+        vec4 diffuse = texture2D(diffuseMap, gl_TexCoord[0].st);\
+        vec3 normal = (texture2D(normalMap, gl_TexCoord[0].st).rgb - 0.5) * 2.0;\
+        float intensity = dot(normalize(light), normalize(normal.xyz));\
+        gl_FragColor = diffuse * intensity;\
     }\
     ");
 
@@ -114,10 +119,11 @@ void Graphics::AddEntity(Entity entity, void *data) {
 void Graphics::RemoveEntity(Entity entity) {}
 
 void Graphics::Update(float dt) {
+    this->lightAngle += dt*2.0f;
     for (auto &item: this->_entities) {
         //item.second->position[0] += 0.1*cos((float)glfwGetTime());
-        //item.second->position[0] += 0.1*((float)(rand() % 100) / 100.0f - 0.5);
-        //item.second->position[1] += 0.1*((float)(rand() % 100) / 100.0f - 0.5);
+        item.second->position[0] += 0.1*((float)(rand() % 100) / 100.0f - 0.5);
+        item.second->position[1] += 0.1*((float)(rand() % 100) / 100.0f - 0.5);
     }
 }
 
@@ -147,7 +153,7 @@ void Graphics::Draw() {
         
         glPushMatrix();
         glMatrixMode(GL_MODELVIEW);
-        double scale = 4.5;
+        double scale = 2.5;
         glScaled(scale, scale, scale);
 
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
@@ -169,20 +175,25 @@ void Graphics::Draw() {
             glBufferData(GL_ARRAY_BUFFER, this->_currentIndex*12*sizeof(float), this->_uvs, GL_STATIC_DRAW);
             glTexCoordPointer(2, GL_FLOAT, 2*sizeof(float), 0);
 
-            glEnable(GL_TEXTURE_2D);
             glActiveTexture(GL_TEXTURE0);
-            int textureLocation = glGetUniformLocation(this->_shaderProgram, "diffuse");
+            int textureLocation = glGetUniformLocation(this->_shaderProgram, "diffuseMap");
             if (textureLocation == -1)
                 cout << "Invalid diffuse variable" << endl;
             glUniform1i(textureLocation, 0);
             glBindTexture(GL_TEXTURE_2D, this->_textures[0]);
+            glEnable(GL_TEXTURE_2D);
 
             glActiveTexture(GL_TEXTURE1);
-            textureLocation = glGetUniformLocation(this->_shaderProgram, "normal");
+            textureLocation = glGetUniformLocation(this->_shaderProgram, "normalMap");
             if (textureLocation == -1)
                 cout << "Invalid normals variable" << endl;
-            glUniform1i(textureLocation, 0);
+            glUniform1i(textureLocation, 1);
             glBindTexture(GL_TEXTURE_2D, this->_textures[1]);
+            glEnable(GL_TEXTURE_2D);
+
+            textureLocation = glGetUniformLocation(this->_shaderProgram, "light");
+            glUniform3f(textureLocation, sin(this->lightAngle),
+                                         cos(this->lightAngle), 0.1f);
 
             glUseProgram(this->_shaderProgram);
             glDrawArrays(GL_TRIANGLES, 0, 6*this->_currentIndex);
